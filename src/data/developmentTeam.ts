@@ -10,12 +10,12 @@ export const developmentTeam: Team = {
     {
       name: 'Jose Luis García Pelayo',
       description: 'Slop Lead',
-    }
-    ,{
+    },
+    {
       name: 'Jesús Martínez Alonso',
       description: 'Slop Master',
-    }
-    ,{
+    },
+    {
       name: 'Jesús Castañer Moreno',
       description: 'Slop Tester',
     },
