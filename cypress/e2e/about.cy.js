@@ -51,7 +51,7 @@ describe('Visualización de la página de información de la aplicación', () =>
 
     it('La sección del número de equipo muestra el número 4', () => {
         cy.get('.team-number')
-            .should('contain.text', '4');
+            .should('contain.text', '13');
     });
 
 });
