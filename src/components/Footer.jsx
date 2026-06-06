@@ -1,15 +1,15 @@
 import React from 'react'
 
-const Footer = () => {
+const Footer = ({ team }) => {
   return (
     <div>
-        <h2>Miembros del equipo:</h2>
+        <h2>{team.name}</h2>
         <ul>
-            <li>Javier García</li>
-            <li>Javier López</li>
-            <li>Javier Martínez</li>
-            <li>Javier Pérez</li>
-            <li>Javier Rodríguez</li>
+            {team.members.map((member) => (
+              <li key={member.name}>
+                <strong>{member.name}</strong>
+              </li>
+            ))}
         </ul>
     </div>
   )

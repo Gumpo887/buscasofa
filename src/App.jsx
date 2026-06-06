@@ -17,6 +17,7 @@ import Register from './components/Register';
 import Login from './components/Login';
 import Footer from './components/Footer';
 import NotFound from './components/NotFound';
+import { developmentTeam } from './data/developmentTeam';
 
 // Componente principal de la aplicación
 // Este componente es el punto de entrada de la aplicación y se encarga de gestionar las rutas y el estado global de la aplicación.
@@ -81,7 +82,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       )}
-      <Footer />
+      <Footer team={developmentTeam} />
     </BrowserRouter>
   )
 }
