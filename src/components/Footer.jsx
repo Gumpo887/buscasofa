@@ -4,6 +4,7 @@ const Footer = ({ team }) => {
   return (
     <div>
         <h2>{team.name}</h2>
+        <h3>Miembros del equipo:</h3>
         <ul>
             {team.members.map((member) => (
               <li key={member.name}>
