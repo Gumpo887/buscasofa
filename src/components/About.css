@@ -7,3 +7,37 @@
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(37, 69, 71, 0.12);
 }
+
+.about-container h1 {
+  margin-top: 0;
+}
+
+.team-info {
+  margin-bottom: 1.5rem;
+  font-weight: bold;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--surface-strong);
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 6px rgba(37, 69, 71, 0.08);
+}
+
+.member-name {
+  color: var(--primary);
+  font-size: 1.1rem;
+  margin: 0 0 0.75rem;
+}
+
+.member-description {
+  line-height: 1.5;
+  margin: 0;
+}
