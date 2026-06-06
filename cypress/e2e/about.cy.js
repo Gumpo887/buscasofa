@@ -42,5 +42,16 @@ describe('Visualización de la página de información de la aplicación', () =>
     it('Tenemos al menos cuatro cards con los miembros del equipo', () => {
         cy.get('.card').should('have.length.at.least', 4);
     });
-    
+
+    it('Existe una sección con el número de equipo', () => {
+        cy.get('.team-number')
+            .should('exist')
+   
+    });
+
+    it('La sección del número de equipo muestra el número 4', () => {
+        cy.get('.team-number')
+            .should('contain.text', '4');
+    });
+
 });
