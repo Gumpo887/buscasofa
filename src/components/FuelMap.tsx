@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import 'leaflet/dist/leaflet.css';
 
 import { getDistanceKm } from '@/apis/utils';
+import { useCheapestStation } from '@/hooks/useCheapestStation';
 import React from 'react';
 
 const icon = new L.Icon({
@@ -18,6 +19,19 @@ const userIcon = new L.Icon({
   iconAnchor: [12, 41],
 });
 
+const FUEL_TYPES = [
+  { value: 'Precio Gasoleo A', label: 'Gasóleo A' },
+  { value: 'Precio Gasoleo B', label: 'Gasóleo B' },
+  { value: 'Precio Gasoleo Premium', label: 'Gasóleo Premium' },
+  { value: 'Precio Gasolina 95 E5', label: 'Gasolina 95 E5' },
+  { value: 'Precio Gasolina 95 E10', label: 'Gasolina 95 E10' },
+  { value: 'Precio Gasolina 95 E5 Premium', label: 'Gasolina 95 E5 Premium' },
+  { value: 'Precio Gasolina 98 E5', label: 'Gasolina 98 E5' },
+  { value: 'Precio Gasolina 98 E10', label: 'Gasolina 98 E10' },
+  { value: 'Precio Biodiesel', label: 'Biodiesel' },
+  { value: 'Precio Bioetanol', label: 'Bioetanol' },
+];
+
 
 /**
  * mapa de estaciones de servicio
@@ -27,7 +41,16 @@ function FuelMap({ stations }) {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [filterRotulo, setFilterRotulo] = useState('');
   const [radius, setRadius] = useState(5); // Nuevo estado para el radio
+  const [selectedFuelType, setSelectedFuelType] = useState('');
   const markerRef = useRef(null);
+
+  const { station: cheapestStation, error: cheapestError } = useCheapestStation(
+    stations,
+    userLocation,
+    radius,
+    selectedFuelType,
+    filterRotulo
+  );
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -53,10 +76,16 @@ function FuelMap({ stations }) {
     [],
   )
 
-
   // Filtrar estaciones a radius km de la ubicación del usuario
-  const filteredStations = userLocation
-    ? stations.filter(station => {
+  // + filtrar por tipo de combustible más barato si se ha seleccionado uno
+  const filteredStations = (() => {
+    if (selectedFuelType) {
+      return cheapestStation ? [cheapestStation] : [];
+    }
+
+    if (!userLocation) return [];
+
+    return stations.filter(station => {
       const lat = parseFloat(station['Latitud'].replace(',', '.'));
       const lon = parseFloat(station['Longitud (WGS84)'].replace(',', '.'));
       const inRadius = getDistanceKm(userLocation[0], userLocation[1], lat, lon) <= radius;
@@ -65,16 +94,22 @@ function FuelMap({ stations }) {
         .includes(filterRotulo.toLowerCase());
       return inRadius && matchRotulo;
     })
-    : [];
+  })();
 
   if (!userLocation) {
     return <div>Obteniendo ubicación...</div>;
   }
 
+  const getPriceDisplay = (station: any) => {
+    if (!selectedFuelType) return null;
+    const price = station[selectedFuelType];
+    if (!price || price === '-') return 'N/A';
+    return `${price}€`;
+  };
 
   return (
     <>
-      <div style={{ margin: '1rem 0', display: 'flex', alignItems: 'center', gap: '2rem' }}>
+      <div style={{ margin: '1rem 0', display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
         <div>
           <label htmlFor="filtro-rotulo">Filtrar por rótulo:</label>
           <input
@@ -99,7 +134,38 @@ function FuelMap({ stations }) {
             style={{ marginLeft: '1rem', verticalAlign: 'middle' }}
           />
         </div>
+        <div>
+          <label htmlFor="fuel-type-select">Más barata por tipo:</label>
+          <select
+            id="fuel-type-select"
+            value={selectedFuelType}
+            onChange={e => setSelectedFuelType(e.target.value)}
+            className="filter-input"
+          >
+            <option value="">Desactivado</option>
+            {FUEL_TYPES.map(fuel => (
+              <option key={fuel.value} value={fuel.value}>
+                {fuel.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
+
+      {selectedFuelType && cheapestError && (
+        <div className="cheapest-station-message cheapest-station-error">
+          {cheapestError}
+        </div>
+      )}
+
+      {selectedFuelType && cheapestStation && (
+        <div className="cheapest-station-message cheapest-station-info">
+          <strong>{cheapestStation['Rótulo']}</strong> - Precio: <strong>{getPriceDisplay(cheapestStation)}</strong>
+          <br />
+          <small>{cheapestStation['Dirección']}, {cheapestStation['Municipio']}</small>
+        </div>
+      )}
+
       <MapContainer center={userLocation} zoom={14} style={{ height: '80vh', width: '100%' }}>
         <TileLayer
           // url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -114,32 +180,37 @@ function FuelMap({ stations }) {
         >
           <Tooltip>Tu ubicación</Tooltip>
         </Marker>
-        {filteredStations.map((station, idx) => (
-          <Marker
-            key={idx}
-            position={[parseFloat(station['Latitud'].replace(',', '.')), parseFloat(station['Longitud (WGS84)'].replace(',', '.'))]}
-            icon={icon}
-            eventHandlers={{
-              click: () => navigate(`/station/${station.IDEESS}`,
-                {
-                  state: {
-                    gobackLink: "/mapa"
-                  }
-                })
-            }}
-          >
-            <Tooltip>
-              <strong>{station['Rótulo']}</strong><br />
-              {station['Dirección']}<br />
-              {station['Municipio']}
-            </Tooltip>
-          </Marker>
-        ))}
+        {filteredStations.map((station, idx) => {
+          return (
+            <Marker
+              key={idx}
+              position={[parseFloat(station['Latitud'].replace(',', '.')), parseFloat(station['Longitud (WGS84)'].replace(',', '.'))]}
+              icon={icon}
+              eventHandlers={{
+                click: () => navigate(`/station/${station.IDEESS}`,
+                  {
+                    state: {
+                      gobackLink: "/mapa"
+                    }
+                  })
+              }}
+            >
+              <Tooltip>
+                <strong>{station['Rótulo']}</strong><br />
+                {station['Dirección']}<br />
+                {station['Municipio']}
+                {selectedFuelType && (
+                  <>
+                    <br />
+                    <strong>Precio: {getPriceDisplay(station)}</strong>
+                  </>
+                )}
+              </Tooltip>
+            </Marker>
+          );
+        })}
       </MapContainer>
-
-
     </>
-
   );
 }
 
