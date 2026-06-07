@@ -6,12 +6,13 @@ const About = () => {
     return (
         <main className="about-container">
             <h1>Quienes somos</h1>
-            <p id="info" className="team-info">
+            <p id="info" className="team-info team-number">
                 Somos el {developmentTeam.name}.
             </p>
             <section className="team-grid" aria-label="Miembros del equipo">
                 {developmentTeam.members.map((member) => (
                     <article className="card" key={member.name}>
+                        <img className="member-image" src={member.image} alt={member.imageAlt} />
                         <h2 className="member-name">{member.name}</h2>
                         <p className="member-description">{member.description}</p>
                     </article>
